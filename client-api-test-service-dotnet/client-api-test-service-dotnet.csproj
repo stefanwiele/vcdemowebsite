@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="jose-jwt" Version="3.2.0" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.35.1" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.9" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
@@ -16,6 +17,18 @@
 
   <ItemGroup>
     <Folder Include="media\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="client-api-test-service-dotnet-tests\UnitTest1.cs">
+      <Link>client-api-test-service-dotnet\UnitTest1.cs</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="client-api-est-service-dotnet\obj\client-api-est-service-dotnet.csproj.nuget.dgspec.json" />
+    <_ContentIncludedByDefault Remove="client-api-est-service-dotnet\obj\project.assets.json" />
+    <_ContentIncludedByDefault Remove="client-api-est-service-dotnet\obj\project.packagespec.json" />
   </ItemGroup>
 
 </Project>
