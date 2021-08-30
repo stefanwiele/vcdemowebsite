@@ -1,0 +1,26 @@
+{
+  "authority": "did:ion:EiDj2-gN7Wr2YVXbm2CuP2n2OdspcSLoLn7UAn6cWp84JQ:eyJkZWx0YSI6eyJwYXRjaGVzIjpbeyJhY3Rpb24iOiJyZXBsYWNlIiwiZG9jdW1lbnQiOnsicHVibGljS2V5cyI6W3siaWQiOiJzaWdfZWVlNWI2NGMiLCJwdWJsaWNLZXlKd2siOnsiY3J2Ijoic2VjcDI1NmsxIiwia3R5IjoiRUMiLCJ4IjoicXRXVUpFOHB4aWdYdUZSV2h6d1NGV194MzFVXzlyeVJSV0Z3ODRBZ3ZwbyIsInkiOiJJOW9KQi1zSy16M3hHWDJoYkIxZXdManNQWEM3WnhnZ0d2aDJ3eV9VZzdZIn0sInB1cnBvc2VzIjpbImF1dGhlbnRpY2F0aW9uIiwiYXNzZXJ0aW9uTWV0aG9kIl0sInR5cGUiOiJFY2RzYVNlY3AyNTZrMVZlcmlmaWNhdGlvbktleTIwMTkifV0sInNlcnZpY2VzIjpbeyJpZCI6ImxpbmtlZGRvbWFpbnMiLCJzZXJ2aWNlRW5kcG9pbnQiOnsib3JpZ2lucyI6WyJodHRwczovL2RpZC53aW5zZWMubmwvIl19LCJ0eXBlIjoiTGlua2VkRG9tYWlucyJ9XX19XSwidXBkYXRlQ29tbWl0bWVudCI6IkVpQmlkOFhCcnFZc0s5UVZuQzJkNEZJdV9MZnNnQk5PeTgteVA3MmNNZTVkLVEifSwic3VmZml4RGF0YSI6eyJkZWx0YUhhc2giOiJFaUJlZzR0clF6YmtXRExWUUJ2aS1VRF9qZElEb2FrUzVfS3NwZURTTWRoT0hBIiwicmVjb3ZlcnlDb21taXRtZW50IjoiRWlBZ20yMVJGZjlSQTYtRGd4bDk1VmxhNXBoekt1RXNHTG5ZWG1NYkk1NmRkZyJ9fQ",
+  "includeQRCode": false,
+  "registration": {
+    "clientName": "...set at runtime..."
+  },
+  "callback": {
+    "url": "...set at runtime...",
+    "nonce": "...set at runtime...",
+    "state": "...set at runtime...",
+    "headers": {
+      "my-api-key": "blabla"
+    }
+  },
+  "presentation": {
+    "includeReceipt": true,
+    "requestedCredentials": [
+      {
+        "type": "GAIAXVCAAD",
+        "manifest": "https://beta.did.msidentity.com/v1.0/1d9b26d0-b6ea-4495-97d3-e85ccf73a154/verifiableCredential/contracts/GAIAXVCAAD",
+        "purpose": "the purpose why the verifier asks for a VC",
+        "trustedIssuers": [ "did:ion:EiDj2-gN7Wr2YVXbm2CuP2n2OdspcSLoLn7UAn6cWp84JQ:eyJkZWx0YSI6eyJwYXRjaGVzIjpbeyJhY3Rpb24iOiJyZXBsYWNlIiwiZG9jdW1lbnQiOnsicHVibGljS2V5cyI6W3siaWQiOiJzaWdfZWVlNWI2NGMiLCJwdWJsaWNLZXlKd2siOnsiY3J2Ijoic2VjcDI1NmsxIiwia3R5IjoiRUMiLCJ4IjoicXRXVUpFOHB4aWdYdUZSV2h6d1NGV194MzFVXzlyeVJSV0Z3ODRBZ3ZwbyIsInkiOiJJOW9KQi1zSy16M3hHWDJoYkIxZXdManNQWEM3WnhnZ0d2aDJ3eV9VZzdZIn0sInB1cnBvc2VzIjpbImF1dGhlbnRpY2F0aW9uIiwiYXNzZXJ0aW9uTWV0aG9kIl0sInR5cGUiOiJFY2RzYVNlY3AyNTZrMVZlcmlmaWNhdGlvbktleTIwMTkifV0sInNlcnZpY2VzIjpbeyJpZCI6ImxpbmtlZGRvbWFpbnMiLCJzZXJ2aWNlRW5kcG9pbnQiOnsib3JpZ2lucyI6WyJodHRwczovL2RpZC53aW5zZWMubmwvIl19LCJ0eXBlIjoiTGlua2VkRG9tYWlucyJ9XX19XSwidXBkYXRlQ29tbWl0bWVudCI6IkVpQmlkOFhCcnFZc0s5UVZuQzJkNEZJdV9MZnNnQk5PeTgteVA3MmNNZTVkLVEifSwic3VmZml4RGF0YSI6eyJkZWx0YUhhc2giOiJFaUJlZzR0clF6YmtXRExWUUJ2aS1VRF9qZElEb2FrUzVfS3NwZURTTWRoT0hBIiwicmVjb3ZlcnlDb21taXRtZW50IjoiRWlBZ20yMVJGZjlSQTYtRGd4bDk1VmxhNXBoekt1RXNHTG5ZWG1NYkk1NmRkZyJ9fQ" ]
+      }
+    ]
+  }
+}
