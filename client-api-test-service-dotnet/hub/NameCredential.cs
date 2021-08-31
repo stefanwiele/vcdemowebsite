@@ -2,15 +2,15 @@ using Newtonsoft.Json;
 
 namespace client_api_test_service_dotnet.hub
 {
-    public class NamedCredential : IVerifiableCredential
+    public class NameCredential : IVerifiableCredential
     {
         [JsonIgnore]
-        public string Type => "NamedCredential";
+        public string Type => "NameCredential";
 
-        [JsonProperty("first_name")]
+        [JsonProperty("firstName")]
         public string FirstName { get; set; }
 
-        [JsonProperty("last_name")]
+        [JsonProperty("lastName")]
         public string LastName { get; set; }
     }
 }

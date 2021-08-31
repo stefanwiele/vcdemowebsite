@@ -1,117 +1,133 @@
 using System;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
-using Jose;
-using Microsoft.IdentityModel.Tokens;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace client_api_test_service_dotnet
+namespace client_api_test_service_dotnet.hub
 {
     public class IdentityHubService
     {
         private readonly RSA _privateKey; // used to sign the jwsCommit
 
-        private readonly RSA _publicKey; // public key of the identity hub. used to encrypt jwe object
+        private const string KeyId = "kid";
+        private const string Iss = "did:example:abc123";
+        private const string Aud = "did:example:abc456";
+        private const string Sub = "did:example:abc123";
 
-        public IdentityHubService(string privateKey, string identityHubPublicKey)
+        public IdentityHubService()
         {
-            var rsa = RSA.Create();
-            _privateKey = rsa;
-            _publicKey = rsa;
+            _privateKey = RSA.Create();
         }
 
-        public void SendToIdentityHub(object commitObject)
+        public Task<HttpResponseMessage> SendToConsumerAsync(IVerifiableCredential commitObject)
         {
-            var jwtHeaders = createHeader("TestCredentials");
+            return SendToIdentityHubAsync(Configuration.ConsumerUri, commitObject);
+        }
+
+        public async Task<HttpResponseMessage> SendToIdentityHubAsync(Uri hub, IVerifiableCredential credential)
+        {
+            // var commit = CreateJsonCommitObject(credential, KeyId);
+            //
+            // var writeRequest = new WriteRequest
+            // {
+            //     Issuer = Iss,
+            //     Audience = Aud,
+            //     Subject = Sub,
+            //     Commit = commit
+            // };
+            // var json = JsonConvert.SerializeObject(writeRequest);
+
+            var client = new HttpClient();
+            var json = JsonConvert.SerializeObject(credential);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            return await client.PostAsync(hub, content);
+        }
+
+        private Commit CreateJsonCommitObject(IVerifiableCredential credentials, string keyId)
+        {
+            var jwtHeaders = CreateJwtHeader(credentials.Type);
             var jwtHeadersJson = JsonConvert.SerializeObject(jwtHeaders);
-            var jwtHeadersBase64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(jwtHeadersJson));
+            var jwtHeadersBase64 = Base64UrlEncode(Encoding.UTF8.GetBytes(jwtHeadersJson));
 
-            var jwtPayload = commitObject;
-            var jwtPayloadJson = JsonConvert.SerializeObject(jwtPayload);
-            var jwtPayloadBase64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(jwtPayloadJson));
+            var jwtPayloadJson = JsonConvert.SerializeObject(credentials);
+            var jwtPayloadBase64 = Base64UrlEncode(Encoding.UTF8.GetBytes(jwtPayloadJson));
 
-            var jwt = CreateJws(jwtHeadersBase64, jwtPayloadBase64);
+            var alg = new HMACSHA256(_privateKey.ExportRSAPrivateKey());
+            var jwtSignature = alg.ComputeHash(Encoding.UTF8.GetBytes($"{jwtHeadersBase64}.{jwtPayloadBase64}"));
+            var jwtSignatureBase64 = Base64UrlEncode(jwtSignature);
 
-            var keyId = "kid";
-            var iss = "sub";
-            var aud = "aud";
-            var sub = "sub";
-            var test = GetJsonCommitObject(jwt, new Dictionary<string, object>
-            {
-                { "iss", keyId }
-            });
-            var payload = "{" +
-                          $@"""@type"":""WriteRequest""," +
-                          $@"""iss"": ""{iss}""," +
-                          $@"""aud"":""{aud}""," +
-                          $@"""sub"":""{sub}""," +
-                          $@"""commit"":{test}," +
-                          $@"""@context"":""https://schema.identity.foundation/0.1""" +
-                          $@"}}";
+            // var jwt = $"{jwtHeadersBase64}.{jwtPayloadBase64}.{jwtSignatureBase64}";
 
-            var recipient = new JweRecipient(JweAlgorithm.RSA_OAEP_256, _publicKey, new Dictionary<string, object>
+            var contents = jwtHeadersBase64 + "." + jwtPayloadBase64;
+            var encoded = Encoding.UTF8.GetBytes(contents);
+
+            var commitHeader = new Dictionary<string, object>
             {
                 { "iss", keyId },
-                { "sub", sub },
-                { "aub", sub }
-            });
+                { "rev", Convert.ToBase64String(SHA256.Create().ComputeHash(encoded)) }
+            };
 
-            var msg = JWE.Encrypt(payload, new[] { recipient }, JweEncryption.A256GCM);
+            var commit = new Commit
+            {
+                ProtectedHeader = jwtHeadersBase64,
+                Payload = jwtPayloadBase64,
+                // Signature = jwtSignatureBase64, // invalid signature atm
+                Header = commitHeader
+            };
+            return commit;
         }
 
-        private static Dictionary<string, object> createHeader(string credentialType)
+        public static string Encode(object payload, byte[] keyBytes)
+        {
+            var segments = new List<string>();
+            var alg = new HMACSHA256(keyBytes);
+            var header = new { alg = "HS256", typ = "JWT" };
+
+            byte[] headerBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(header, Formatting.None));
+            byte[] payloadBytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(payload, Formatting.None));
+            //byte[] payloadBytes = Encoding.UTF8.GetBytes(@"{"iss":"761326798069-r5mljlln1rd4lrbhg75efgigp36m78j5@developer.gserviceaccount.com","scope":"https://www.googleapis.com/auth/prediction","aud":"https://accounts.google.com/o/oauth2/token","exp":1328554385,"iat":1328550785}");
+
+            segments.Add(Base64UrlEncode(headerBytes));
+            segments.Add(Base64UrlEncode(payloadBytes));
+
+            var stringToSign = string.Join(".", segments.ToArray());
+
+            var bytesToSign = Encoding.UTF8.GetBytes(stringToSign);
+
+            byte[] signature = alg.ComputeHash(bytesToSign);
+            segments.Add(Base64UrlEncode(signature));
+
+            return string.Join(".", segments.ToArray());
+        }
+
+        private static string Base64UrlEncode(byte[] input)
+        {
+            var output = Convert.ToBase64String(input);
+            output = output.Split('=')[0]; // Remove any trailing '='s
+            output = output.Replace('+', '-'); // 62nd char of encoding
+            output = output.Replace('/', '_'); // 63rd char of encoding
+            return output;
+        }
+
+        private static Dictionary<string, object> CreateJwtHeader(string credentialType)
         {
             var parameters = new Dictionary<string, object>
             {
                 { "context", "GAIA-X" },
                 { "type", credentialType }, // e.g. RegistrationCredentials
                 { "interface", "Collections" },
-                { "operation", "create" }, // e.g. create
-                //{ "committed_at", ZonedDateTime.now(ZoneOffset.UTC).toString() },
-                { "committed_at", DateTime.Now.ToUniversalTime() }, // e.g. 2021-08-30T11:55:56.449552098Z
+                { "operation", "create" },
+                { "committed_at", DateTime.Now.ToUniversalTime().ToString("O") },
                 { "commit_strategy", "basic" },
-                { "sub", "sub" }
+                { "sub", "sub" },
+                { "alg", "HS256" },
+                { "typ", "JWT" }
             };
             return parameters;
-        }
-
-        private static byte[] StringToByteArray(string hex)
-        {
-            int NumberChars = hex.Length;
-            byte[] bytes = new byte[NumberChars / 2];
-            for (int i = 0; i < NumberChars; i += 2)
-                bytes[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
-            return bytes;
-        }
-
-        private string CreateJws(string header, string payload)
-        {
-            var signature = _privateKey.SignData(Convert.FromBase64String(payload),
-                HashAlgorithmName.SHA256,
-                RSASignaturePadding.Pkcs1);
-            return $"{header}.{payload}.{Convert.ToBase64String(signature)}";
-        }
-
-        public string GetJsonCommitObject(string serializedJwt, Dictionary<string, object> header)
-        {
-            var tokens = serializedJwt.Split("\\.");
-            if (tokens.Length < 3)
-            {
-                throw new ArgumentException("Invalid jwt");
-            }
-
-            var protectedHeader = tokens[0];
-            var payload = tokens[1];
-            var signature = tokens[2];
-
-            return $@"{{" +
-                   $@"""protected"": ""{protectedHeader}""," +
-                   $@"""payload"":""{payload}""," +
-                   $@"""signature"":""{signature}""," +
-                   $@"""header"":""{header}""" +
-                   $@"}}";
         }
     }
 }

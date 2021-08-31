@@ -1,8 +1,10 @@
+using System;
+using System.Threading.Tasks;
 using client_api_test_service_dotnet;
-using client_api_test_service_dotnet_tests.Resources;
+using client_api_test_service_dotnet.hub;
 using NUnit.Framework;
 
-namespace client_api_test_service_dotnet_tests
+namespace client_api_test_service_dotnet_tests.hub
 {
     [TestFixture]
     public class IdentityHubServiceTests
@@ -12,13 +14,19 @@ namespace client_api_test_service_dotnet_tests
         [SetUp]
         public void SetUp()
         {
-            _identityHubService = new IdentityHubService(RSA.Private, RSA.Public);
+            _identityHubService = new IdentityHubService();
         }
 
         [Test]
-        public void MyTest()
+        public async Task MyTest()
         {
-            _identityHubService.SendToIdentityHub(@"{""region"":""eu"",""companyId"":""Consumer""}");
+            var hub = Configuration.LocalhostConnectorUri;
+            // var credentials = new GaiaXCredentials { Region = "eu", CompanyId = "Consumer" };
+            var credentials = new NameCredential { FirstName = "John", LastName = "Doe" };
+            var response = await _identityHubService.SendToIdentityHubAsync(hub, credentials);
+            var responseString = await response.Content.ReadAsStringAsync();
+
+            Console.WriteLine(responseString);
         }
     }
 }
